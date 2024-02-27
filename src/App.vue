@@ -1,20 +1,21 @@
 <template>
   <div class="w-4/5 m-auto bg-white rounded-xl shadow-xl mt-50">
-    <Drawer :cart="cart" v-if="isDrawerOpen" @closeDrawer="closeDrawer" :removeFromCart="removeFromCart" :totalPrice="totalPrice" :taxPrice="taxPrice" @createOrder="createOrder" :isCreatingOrder="isCreatingOrder" />
+    <Drawer v-if="isDrawerOpen" @closeDrawer="closeDrawer" :cart="cart"  :totalPrice="totalPrice" :taxPrice="taxPrice" @createOrder="createOrder" :isCreatingOrder="isCreatingOrder"/>
     <Header @openDrawer="openDrawer" :totalPrice="totalPrice"/>
     <div class="p-30">
-      <Home @sneakers-fetched="handleSneakersFetched" :removeFromCart="removeFromCart" :addToCart="addToCart" @update-cart="updateCart"/>
+      <router-view></router-view>
     </div>
   </div>
 </template>
 
 <script>
-import Home from "@/pages/Home.vue";
 import Drawer from "@/components/Drawer.vue";
 import Header from "@/components/Header.vue";
+import {computed} from "vue";
+import axios from "axios";
 
 export default {
-  components: {Drawer, Header, Home},
+  components: {Drawer, Header},
   data() {
     return {
       cart: [],
@@ -22,13 +23,18 @@ export default {
       taxRate: 0.05,
       isDrawerOpen: false,
       isCreatingOrder: false,
-      sneakers: []
     };
   },
+  provide() {
+    return {
+      cart: computed(() => this.cart),
+      actions: {
+        addToCart: this.addToCart,
+        removeFromCart: this.removeFromCart
+      }
+    }
+  },
   methods: {
-    async handleSneakersFetched(sneakers) {
-      this.sneakers = sneakers;
-    },
     async createOrder() {
       try {
         this.isCreatingOrder = true;
@@ -52,12 +58,10 @@ export default {
     addToCart(sneaker) {
       this.cart.push(sneaker);
       sneaker.isAdded = true;
-      console.log(sneaker,'add')
     },
     removeFromCart(sneaker) {
-      this.cart.splice(this.cart.indexOf(sneaker), 1);
+      this.cart = this.cart.filter(item => item.id !== sneaker.id);
       sneaker.isAdded = false;
-      console.log(sneaker,'remove')
     },
     openDrawer() {
       this.isDrawerOpen = true;
@@ -65,9 +69,6 @@ export default {
     closeDrawer() {
       this.isDrawerOpen = false;
     },
-    updateCart(newCart) {
-      this.cart = newCart;
-    }
   },
   computed: {
     taxPrice() {
@@ -84,6 +85,17 @@ export default {
       },
       deep: true
     }
+  },
+  mounted() {
+    const localCart = localStorage.getItem('cart');
+    if (localCart && typeof localCart === 'string') {
+      this.cart = JSON.parse(localCart);
+    } else {
+      this.cart = [];
+    }
   }
 }
 </script>
+
+
+

@@ -8,7 +8,7 @@
         <h2 class="text-2xl font-bold">Корзина</h2>
       </div>
       <div v-if="totalPrice">
-        <CartItemsList :cart="cart" :removeFromCart="removeFromCart"/>
+        <CartItemsList/>
         <div class="flex flex-col gap-10 my-20">
           <div class="flex gap-10">
             <span>Итого:</span>
@@ -58,10 +58,6 @@ export default {
       type:Boolean,
       required:true
     },
-    removeFromCart: {
-    type: Function,
-    required: true
-  }
   },
   methods:{
     handleCloseDrawer(){

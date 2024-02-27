@@ -9,7 +9,7 @@
       </select>
       <div class="relative">
         <img class="absolute left-4 top-2.5" src="/search.svg" alt="search"/>
-        <input @change="onChangeSearchInput" type="text" class="border rounded py-5 pl-40 pr-10 outline-none focus:border-gray" placeholder="Поиск...">
+        <input @input="onChangeSearchInput" type="text" class="border rounded py-5 pl-40 pr-10 outline-none focus:border-gray" placeholder="Поиск...">
       </div>
     </div>
   </div>
@@ -19,23 +19,19 @@
 <script>
 import CardList from "@/components/CardList.vue";
 import axios from "axios";
+import debounce from "debounce";
 
 export default {
   components: { CardList },
   data() {
     return {
-      newCart:[],
-      sneakers: [],
       favorites: [],
       sortBy: 'name',
-      searchQuery: ''
+      searchQuery: '',
+      sneakers: [],
     };
   },
-  props: {
-    removeFromCart: Function,
-    addToCart: Function,
-  },
-  emits: ['sneakersFetched', 'updateCart'],
+  inject: ['cart','actions'],
   methods: {
     async fetchSneakers() {
       try {
@@ -52,11 +48,11 @@ export default {
           favoriteId: null,
           isAdded: false
         }));
-        this.$emit('sneakersFetched', this.sneakers);
       } catch (e) {
         alert("Ошибка")
       }
     },
+
     async fetchFavorites() {
       try {
         const response = await axios.get('https://67ee0e5bcbd05745.mokky.dev/favorites');
@@ -100,37 +96,31 @@ export default {
     },
     onClickAddToCart(sneaker) {
       if (!sneaker.isAdded) {
-        this.addToCart(sneaker);
+        this.actions.addToCart(sneaker);
       } else {
-        this.removeFromCart(sneaker)
+        this.actions.removeFromCart(sneaker)
       }
     },
     onChangeSelect(event) {
       this.sortBy = event.target.value;
       this.fetchSneakers();
     },
-    onChangeSearchInput(event) {
+    onChangeSearchInput: debounce(function(event) {
       this.searchQuery = event.target.value;
       this.fetchSneakers();
-    },
+    }, 1000),
   },
   async mounted() {
     try {
-      const localCart = localStorage.getItem('cart');
-      if (localCart && typeof localCart === 'string') {
-        this.newCart = JSON.parse(localCart);
-      } else {
-        this.newCart = [];
-      }
-      this.$emit('updateCart', this.newCart);
-
       await this.fetchSneakers();
       await this.fetchFavorites();
 
-      this.sneakers = this.sneakers.map((sneaker) => ({
-        ...sneaker,
-        isAdded: this.newCart.some((cartItem) => cartItem.id === sneaker.id)
-      }));
+      this.sneakers = this.sneakers.map((sneaker) => {
+        return{
+          ...sneaker,
+          isAdded: this.cart.some((cartItem) => cartItem.id === sneaker.id)
+        }
+      });
 
     } catch (error) {
       console.error('Error fetching data:', error);

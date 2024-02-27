@@ -12,9 +12,9 @@ import Card from "@/components/Card.vue";
 
 export default {
   components: { Card },
-  props:{
-    sneakers:{
-      type:Array,
+  props: {
+    sneakers: {
+      type: Array,
       required: true
     }
   },
@@ -25,8 +25,7 @@ export default {
     handleAddToCart(sneaker) {
       this.$emit('onClickAddToCart', sneaker);
     }
-  }
-
+  },
 };
 </script>
 

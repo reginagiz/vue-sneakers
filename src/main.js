@@ -2,10 +2,24 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import './assets/css/tailwind.css';
 import { autoAnimatePlugin } from '@formkit/auto-animate/vue'
-import router from './router'
-import store from './store'
+import {createRouter, createWebHistory} from "vue-router";
+import Home from "@/pages/Home.vue";
+import Favorites from "@/pages/Favorites.vue";
 
-const app=createApp(App)
-app.use(autoAnimatePlugin)
-app.mount('#app')
+const app = createApp(App);
 
+const routes = [
+    {path:'/',name:'Home',component:Home},
+    {path:'/favorites',name:'Favorites',component:Favorites},
+];
+
+const router = createRouter({
+    history: createWebHistory(),
+    routes: routes,
+});
+
+app.use(router);
+
+app.use(autoAnimatePlugin);
+
+app.mount('#app');
