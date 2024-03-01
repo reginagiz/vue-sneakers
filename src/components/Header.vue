@@ -14,7 +14,7 @@
 
       <button @click="handleOpenDrawer" class="flex items-center gap-10 text-gray cursor-pointer border-none bg-none hover:text-black">
         <img src="/cart.svg" alt="cart"/>
-        <b>{{totalPrice}}</b>
+        <b>{{TotalPrice}}</b>
       </button>
 
       <router-link to="/favorites">
@@ -34,18 +34,19 @@
 </template>
 
 <script>
+import { mapState} from "pinia";
+import {useCartStore} from "@/store/CartStore";
+
 export default {
-  props:{
-    totalPrice:{
-      type:Number,
-      required:true
-    }
-  },
   methods:{
     handleOpenDrawer(){
       this.$emit("openDrawer")
-    }
-  }
+    },
+  },
+  computed: {
+    ...mapState(useCartStore, ['TotalPrice']),
+  },
+
 };
 </script>
 

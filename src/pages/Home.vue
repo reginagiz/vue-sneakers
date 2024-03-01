@@ -13,13 +13,15 @@
       </div>
     </div>
   </div>
-  <CardList :sneakers="sneakers" @addToFavorites="addToFavorites" @onClickAddToCart="onClickAddToCart"/>
+  <CardList :sneakers="sneakers" @addToFavorites="addToFavorites" @addToCart="addToCart"/>
 </template>
 
 <script>
 import CardList from "@/components/CardList.vue";
 import axios from "axios";
 import debounce from "debounce";
+import {useCartStore} from "@/store/CartStore";
+import {mapActions, mapState} from 'pinia';
 
 export default {
   components: { CardList },
@@ -31,7 +33,6 @@ export default {
       sneakers: [],
     };
   },
-  inject: ['cart','actions'],
   methods: {
     async fetchSneakers() {
       try {
@@ -73,6 +74,7 @@ export default {
         alert("Ошибка");
       }
     },
+
     async addToFavorites(sneaker) {
       try {
         sneaker.isFavorite = !sneaker.isFavorite;
@@ -81,6 +83,7 @@ export default {
             sneaker_id: sneaker.id
           };
           const response = await axios.post('https://67ee0e5bcbd05745.mokky.dev/favorites', obj);
+
           sneaker.favoriteId = response.data.favoriteId;
         } else {
           if (sneaker.favoriteId) {
@@ -94,31 +97,40 @@ export default {
         alert("Ошибка");
       }
     },
-    onClickAddToCart(sneaker) {
-      if (!sneaker.isAdded) {
-        this.actions.addToCart(sneaker);
-      } else {
-        this.actions.removeFromCart(sneaker)
-      }
-    },
+
+    // onClickAddToCart(sneaker) {
+    //   if (!sneaker.isAdded) {
+    //     this.addToCart(sneaker);
+    //   } else {
+    //     this.removeFromCart(sneaker);
+    //   }
+    // },
+
     onChangeSelect(event) {
       this.sortBy = event.target.value;
       this.fetchSneakers();
     },
+
     onChangeSearchInput: debounce(function(event) {
       this.searchQuery = event.target.value;
       this.fetchSneakers();
     }, 1000),
+
+    ...mapActions(useCartStore, ['fetchCart','addToCart'])
+  },
+  computed: {
+    ...mapState(useCartStore, ['Cart']),
   },
   async mounted() {
     try {
       await this.fetchSneakers();
       await this.fetchFavorites();
+      await this.fetchCart()
 
       this.sneakers = this.sneakers.map((sneaker) => {
         return{
           ...sneaker,
-          isAdded: this.cart.some((cartItem) => cartItem.id === sneaker.id)
+          isAdded: this.Cart.some((cartItem) => cartItem.id === sneaker.id)
         }
       });
 
@@ -126,5 +138,18 @@ export default {
       console.error('Error fetching data:', error);
     }
   },
+  // watch: {
+  //   cart: {
+  //     handler(newVal) {
+  //       if (newVal.length === 0) {
+  //         this.sneakers = this.sneakers.map((sneaker) => ({
+  //           ...sneaker,
+  //           isAdded: false
+  //         }));
+  //       }
+  //     },
+  //     deep: true
+  //   },
+  // }
 }
 </script>

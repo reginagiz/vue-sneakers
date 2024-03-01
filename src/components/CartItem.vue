@@ -23,7 +23,8 @@ export default {
   },
   methods: {
     handleRemoveFromCart() {
-      this.$emit('removeFromCart', this.item);
+      this.$emit('addToCart', this.item);
+      console.log('hello')
     }
   }
 }
