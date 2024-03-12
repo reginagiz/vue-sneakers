@@ -13,7 +13,7 @@
       </div>
     </div>
   </div>
-  <CardList :sneakers="sneakers" @addToFavorites="addToFavorites" @addToCart="addToCart"/>
+  <CardList :sneakers="sneakers" @clickToFavorite="clickToFavorite" @addToCart="addToCart"/>
 </template>
 
 <script>
@@ -22,134 +22,33 @@ import axios from "axios";
 import debounce from "debounce";
 import {useCartStore} from "@/store/CartStore";
 import {mapActions, mapState} from 'pinia';
+import {useSneakersStore} from "@/store/SneakersStore";
+import {useFavoritesStore} from "@/store/FavoritesStore";
 
 export default {
   components: { CardList },
-  data() {
-    return {
-      favorites: [],
-      sortBy: 'name',
-      searchQuery: '',
-      sneakers: [],
-    };
-  },
+
   methods: {
-    async fetchSneakers() {
-      try {
-        const response = await axios.get('https://67ee0e5bcbd05745.mokky.dev/sneakers', {
-          params: {
-            sortBy: this.sortBy,
-            title: this.searchQuery ? `*${this.searchQuery}*` : undefined
-          }
-        });
-        this.sneakers = response.data;
-        this.sneakers = this.sneakers.map((obj) => ({
-          ...obj,
-          isFavorite: false,
-          favoriteId: null,
-          isAdded: false
-        }));
-      } catch (e) {
-        alert("Ошибка")
-      }
-    },
-
-    async fetchFavorites() {
-      try {
-        const response = await axios.get('https://67ee0e5bcbd05745.mokky.dev/favorites');
-        this.favorites = response.data;
-        this.sneakers = this.sneakers.map((item) => {
-          const favorite = this.favorites.find((favorite) => favorite.sneaker_id === item.id);
-          if (favorite) {
-            return {
-              ...item,
-              isFavorite: true,
-              favoriteId: favorite.id
-            };
-          } else {
-            return item;
-          }
-        });
-      } catch (e) {
-        alert("Ошибка");
-      }
-    },
-
-    async addToFavorites(sneaker) {
-      try {
-        sneaker.isFavorite = !sneaker.isFavorite;
-        if (sneaker.isFavorite) {
-          const obj = {
-            sneaker_id: sneaker.id
-          };
-          const response = await axios.post('https://67ee0e5bcbd05745.mokky.dev/favorites', obj);
-
-          sneaker.favoriteId = response.data.favoriteId;
-        } else {
-          if (sneaker.favoriteId) {
-            await axios.delete(`https://67ee0e5bcbd05745.mokky.dev/favorites/${sneaker.favoriteId}`);
-          }
-          sneaker.isFavorite = false;
-          sneaker.favoriteId = null;
-        }
-      } catch (e) {
-        console.error("Error:", e);
-        alert("Ошибка");
-      }
-    },
-
-    // onClickAddToCart(sneaker) {
-    //   if (!sneaker.isAdded) {
-    //     this.addToCart(sneaker);
-    //   } else {
-    //     this.removeFromCart(sneaker);
-    //   }
-    // },
-
-    onChangeSelect(event) {
-      this.sortBy = event.target.value;
-      this.fetchSneakers();
-    },
-
-    onChangeSearchInput: debounce(function(event) {
-      this.searchQuery = event.target.value;
-      this.fetchSneakers();
-    }, 1000),
-
-    ...mapActions(useCartStore, ['fetchCart','addToCart'])
+    ...mapActions(useCartStore, ['fetchCart','addToCart']),
+    ...mapActions(useFavoritesStore, ['fetchFavorites','clickToFavorite']),
+    ...mapActions(useSneakersStore, ['fetchSneakers','onChangeSelect','onChangeSearchInput']),
   },
+
   computed: {
     ...mapState(useCartStore, ['Cart']),
+    ...mapState(useSneakersStore, ['sneakers']),
+    ...mapState(useFavoritesStore, ['favorites']),
   },
+
   async mounted() {
     try {
-      await this.fetchSneakers();
       await this.fetchFavorites();
       await this.fetchCart()
-
-      this.sneakers = this.sneakers.map((sneaker) => {
-        return{
-          ...sneaker,
-          isAdded: this.Cart.some((cartItem) => cartItem.id === sneaker.id)
-        }
-      });
+      await this.fetchSneakers();
 
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   },
-  // watch: {
-  //   cart: {
-  //     handler(newVal) {
-  //       if (newVal.length === 0) {
-  //         this.sneakers = this.sneakers.map((sneaker) => ({
-  //           ...sneaker,
-  //           isAdded: false
-  //         }));
-  //       }
-  //     },
-  //     deep: true
-  //   },
-  // }
 }
 </script>

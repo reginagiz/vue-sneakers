@@ -1,13 +1,21 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import debounce from 'debounce';
+import { debounce } from 'lodash';
+import { useCartStore } from "@/store/CartStore";
+import { useFavoritesStore } from "@/store/FavoritesStore";
 
-export default defineStore({
+const debouncedFetchSneakers = debounce(async function (store) {
+  await store.fetchSneakers();
+}, 1000);
+
+export const useSneakersStore = defineStore({
   id: 'sneakers',
   state: () => ({
     sneakers: [],
     sortBy: 'name',
     searchQuery: '',
+    cartStore: useCartStore(),
+    favoritesStore: useFavoritesStore(),
   }),
   actions: {
     async fetchSneakers() {
@@ -21,24 +29,26 @@ export default defineStore({
               },
             }
         );
-        const sneakers = response.data.map((obj) => ({
-          ...obj,
-          isFavorite: false,
-          favoriteId: null,
-          isAdded: false,
+
+        this.sneakers = response.data.map((sneaker) => ({
+          ...sneaker,
+          isAdded: this.cartStore.Cart.some((cartItem) => cartItem.sneaker.id === sneaker.id),
+          isFavorite: this.favoritesStore.favorites.some((favoriteItem) => favoriteItem.id === sneaker.id),
         }));
-        this.sneakers = sneakers;
+
       } catch (e) {
         alert('Ошибка');
       }
     },
+
     onChangeSelect(event) {
       this.sortBy = event.target.value;
-      this.fetchSneakers();
+      debouncedFetchSneakers(this);
     },
-    onChangeSearchInput: debounce(function (event) {
+
+    onChangeSearchInput(event) {
       this.searchQuery = event.target.value;
-      this.fetchSneakers();
-    }, 1000),
+      debouncedFetchSneakers(this);
+    },
   },
 });

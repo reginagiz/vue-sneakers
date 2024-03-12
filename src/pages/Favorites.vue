@@ -1,35 +1,29 @@
 <template>
   <div>
     <h2 class="text-4xl font-bold mb-20">Мои закладки</h2>
-    <CardList :sneakers="favorites"/>
+    <CardList :sneakers="favorites" @clickToFavorite="clickToFavorite"/>
   </div>
 </template>
 
 <script>
 import axios from "axios";
 import CardList from "@/components/CardList.vue";
+import {mapState,mapActions} from "pinia";
+import {useFavoritesStore} from "@/store/FavoritesStore";
+
 
 export default {
   components: {CardList},
-  data(){
-    return{
-      favorites:[]
-    }
-  },
   methods:{
-    async fetchFavorites() {
-      try {
-        const response = await axios.get('https://67ee0e5bcbd05745.mokky.dev/favorites?_relations=sneakers');
-        console.log(response)
-        this.favorites = response.data.map((obj)=>obj.sneaker)
-      } catch (e) {
-        alert("Ошибка");
-      }
-    },
+    ...mapActions(useFavoritesStore, ['fetchFavorites','clickToFavorite']),
+  },
+  computed: {
+    ...mapState(useFavoritesStore, ['favorites']),
   },
   async mounted() {
     try {
       await this.fetchFavorites();
+
     } catch (error) {
       console.error('Error fetching data:', error);
     }

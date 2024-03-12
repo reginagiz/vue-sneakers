@@ -12,10 +12,10 @@ import {mapActions, mapState} from 'pinia';
 export default {
   components: {CartItem},
   methods: {
-    ...mapActions(useCartStore, ['addToCart']),
+    ...mapActions(useCartStore, ['removeFromCart']),
 
     removeItemFromCart(item) {
-      this.addToCart(item);
+      this.removeFromCart(item);
     },
   },
   computed: {

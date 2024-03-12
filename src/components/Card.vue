@@ -13,7 +13,7 @@
           <span class="text-gray">Цена:</span>
           <b>{{sneaker.price}} ₽</b>
         </div>
-        <button @click="toggleCart">
+        <button v-if="isOnMainPage" @click="toggleCart" >
           <img :src="isAdded ? '/checked.svg' : '/plus.svg'" alt="plus">
         </button>
       </div>
@@ -27,35 +27,43 @@ export default {
     sneaker: {
       type: Object,
       required: true
+    },
+    isFavoritePage: {
+      type: Boolean
     }
   },
   data() {
     return {
-      isFavorite: this.sneaker.isFavorite || false,
-      isAdded: this.sneaker.isFavorite || false,
+      isOnMainPage: false,
+      isFavorite: false,
+      isAdded: false,
     };
+  },
+  mounted() {
+    this.isOnMainPage = this.$route.name === 'Home';
+    this.isFavorite = this.sneaker.isFavorite || false;
+    this.isAdded = this.sneaker.isAdded || false;
   },
   methods: {
     toggleFavorite() {
-      this.isFavorite = !this.isFavorite;
-      this.$emit('addToFavorites', this.sneaker);
+      this.$emit('clickToFavorite', this.sneaker);
     },
     toggleCart() {
-      this.isAdded = !this.isAdded;
-      this.$emit('onClickAddToCart', this.sneaker);
+      this.$emit('addToCart', this.sneaker);
     }
   },
-  watch:{
-    sneaker:{
+  watch: {
+    sneaker: {
       handler(newItem) {
         this.isFavorite = newItem.isFavorite;
         this.isAdded = newItem.isAdded;
       },
-      deep:true
+      deep: true
     }
-  }
+  },
 }
 </script>
+
 
 <style scoped>
 

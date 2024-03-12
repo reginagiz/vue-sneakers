@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="sneakers" class="flex justify-start gap-10 flex-wrap content-start mt-20" v-auto-animate>
-      <Card v-for="sneaker in sneakers" :sneaker="sneaker" :key="sneaker.id" @addToFavorites="handleAddToFavorites" @onClickAddToCart="handleAddToCart"/>
+      <Card v-for="sneaker in sneakers" :sneaker="sneaker" :key="sneaker.id" @clickToFavorite="handleAddToFavorites" @addToCart="handleAddToCart"/>
     </div>
     <div v-else>Идет загрузка...</div>
   </div>
@@ -21,7 +21,7 @@ export default {
   },
   methods: {
     handleAddToFavorites(sneaker) {
-      this.$emit('addToFavorites', sneaker);
+      this.$emit('clickToFavorite', sneaker);
     },
     handleAddToCart(sneaker) {
       this.$emit('addToCart', sneaker);
